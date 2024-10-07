@@ -1,0 +1,109 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Load CSV files
+student_assessment = pd.read_csv('student_assessment.csv')
+student_database = pd.read_csv('student_database.csv')
+
+# Merge datasets based on Student ID to associate previous GPA with current assessments
+merged_data = pd.merge(student_assessment, student_database[['Student ID', 'GPA']], on='Student ID')
+
+
+# Fill missing scores based on the closest higher GPA student's scores
+def fill_missing_scores(row, data):
+    gpa = row['GPA']
+    higher_gpa_students = data[data['GPA'] >= gpa].sort_values(by='GPA')
+
+    # For each score column, if -1 (missing), replace with closest higher GPA student's score
+    for column in data.columns:
+        if row[column] == -1:
+            for _, higher_gpa_row in higher_gpa_students.iterrows():
+                if higher_gpa_row[column] != -1:
+                    row[column] = higher_gpa_row[column]
+                    break
+    return row
+
+
+# Apply missing score filling function to all students
+filled_data = merged_data.apply(lambda row: fill_missing_scores(row, merged_data), axis=1)
+
+
+# Function to calculate total score based on weights
+def calculate_total_score(row):
+    quiz_scores = sorted([row[f'Quiz_{i}'] for i in range(1, 11)], reverse=True)[:5]
+    quiz_total = sum(quiz_scores) / 5 * 0.20  # 20% weight
+    homework_total = sum([row[f'Homework_{i}'] for i in range(1, 6)]) / 5 * 0.25  # 25% weight
+    exam_1_total = row['Exam_1'] * 0.10  # 10% weight
+    exam_2_total = row['Exam_2'] * 0.20  # 20% weight
+    exam_3_total = row['Exam_3'] * 0.25  # 25% weight
+    total_score = quiz_total + homework_total + exam_1_total + exam_2_total + exam_3_total
+    return total_score
+
+
+# Calculate total score for each student
+filled_data['Total_Score'] = filled_data.apply(calculate_total_score, axis=1)
+
+
+# Function to assign letter grades based on total score
+def assign_letter_grade(total_score):
+    if 94 <= total_score <= 100:
+        return 'A'
+    elif 90 <= total_score < 94:
+        return 'A-'
+    elif 87 <= total_score < 90:
+        return 'B+'
+    elif 84 <= total_score < 87:
+        return 'B'
+    elif 80 <= total_score < 84:
+        return 'B-'
+    elif 77 <= total_score < 80:
+        return 'C+'
+    elif 74 <= total_score < 77:
+        return 'C'
+    elif 70 <= total_score < 74:
+        return 'C-'
+    elif 60 <= total_score < 70:
+        return 'D'
+    else:
+        return 'F'
+
+
+# Assign letter grades to students
+filled_data['Letter_Grade'] = filled_data['Total_Score'].apply(assign_letter_grade)
+
+# Define custom order for letter grades based on percentage scale (low to high)
+grade_order = ['F', 'D', 'C-', 'C', 'C+', 'B-', 'B', 'B+', 'A-', 'A']
+
+# Set the order for plotting
+filled_data['Letter_Grade'] = pd.Categorical(filled_data['Letter_Grade'], categories=grade_order, ordered=True)
+
+# Plot bar chart - distribution of letter grades in the correct order
+plt.figure(figsize=(8, 6))
+filled_data['Letter_Grade'].value_counts().sort_index().plot(kind='bar', color='skyblue')
+plt.title('Distribution of Letter Grades')
+plt.xlabel('Letter Grade')
+plt.ylabel('Number of Students')
+plt.xticks(rotation=0)
+plt.tight_layout()
+plt.show()
+
+# Plot scatter plot - GPA vs Letter Grades, ensuring correct letter grade order
+plt.figure(figsize=(8, 6))
+plt.scatter(filled_data['GPA'], filled_data['Letter_Grade'].cat.codes, color='blue',
+            alpha=0.5)  # Use categorical codes for y-axis
+plt.title('GPA vs. Letter Grades')
+plt.xlabel('GPA (Previous Semester)')
+plt.ylabel('Letter Grade')
+plt.yticks(ticks=range(len(grade_order)), labels=grade_order)  # Set correct labels for y-axis
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+# Export student data with total score and letter grade to CSV
+output_columns = ['Student ID', 'First Name', 'Last Name', 'Total_Score', 'Letter_Grade']
+output_data = pd.merge(filled_data[['Student ID', 'Total_Score', 'Letter_Grade']],
+                       student_database[['Student ID', 'First Name', 'Last Name']],
+                       on='Student ID')
+
+# Export to CSV
+output_data.to_csv('student_grades.csv', index=False)
