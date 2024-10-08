@@ -1,0 +1,13 @@
+The student_database.csv file contains information for 100 students. Each student has the following data:first name, last name, student ID "number", current GPA (number between 0.0 and 4.0), and a field indicating whether they are "Enrolled" or "Dropped"
+The GPA values for the students follow a Gaussian distribution with a mean of 3 and a standard deviation of 0.5. Among all students, 90% are enrolled, and 10% are dropped.
+
+The student_assessment.csv file includes the student ID, the scores for each quiz, each homework, and each exam.
+
+Quiz: There are 10 quizzes. Enrolled students have a 100% completion rate, while dropped students have a 20% completion rate. The quiz scores follow a Gaussian distribution with parameters [mean: 90, standard deviation: 10].
+
+Homework: There are 5 homework assignments, which account for 25% of the final grade. Enrolled students have a 90% completion rate, while dropped students have a 20% completion rate. Homework scores for students in the top 80% of GPA (according to the student_database.csv) follow a Gaussian distribution with parameters [mean: 90, standard deviation: 10]. For students in the bottom 20% of GPA, homework scores follow a distribution with parameters [mean: 60, standard deviation: 20].
+
+Exam: There are 3 exams, with each exam contributing 10%, 20%, and 25% to the final grade, respectively. Enrolled students have a 95% completion rate, while dropped students have a 10% completion rate. The exam scores for the top 20% of students (by GPA) follow a Gaussian distribution with parameters [mean: 95, standard deviation: 10]. For the middle 40% of students, exam scores follow a distribution with parameters [mean: 70, standard deviation: 10], and for the bottom 40%, the distribution parameters are [mean: 60, standard deviation: 2].
+
+Grading Policy:
+For each student, the top 5 out of 10 quiz scores will be considered. If there are any missing scores for any assessment (quiz, homework, exam), they will be replaced by the score of another student whose GPA is the closest to (and not lower than) the GPA of the student with the missing score.
