@@ -12,7 +12,6 @@ student_database = pd.read_csv('student_database.csv')
 # Merge datasets based on Student ID to associate previous GPA with current assessments
 merged_data = pd.merge(student_assessment, student_database[['Student ID', 'GPA']], on='Student ID')
 
-
 # Fill missing scores based on the closest higher GPA student's scores
 def fill_missing_scores(row, data):
     gpa = row['GPA']
@@ -27,10 +26,8 @@ def fill_missing_scores(row, data):
                     break
     return row
 
-
 # Apply missing score filling function to all students
 filled_data = merged_data.apply(lambda row: fill_missing_scores(row, merged_data), axis=1)
-
 
 # Function to calculate total score based on weights
 def calculate_total_score(row):
@@ -43,10 +40,8 @@ def calculate_total_score(row):
     total_score = quiz_total + homework_total + exam_1_total + exam_2_total + exam_3_total
     return total_score
 
-
 # Calculate total score for each student
 filled_data['Total_Score'] = filled_data.apply(calculate_total_score, axis=1)
-
 
 # Function to assign letter grades based on total score
 def assign_letter_grade(total_score):
@@ -71,17 +66,10 @@ def assign_letter_grade(total_score):
     else:
         return 'F'
 
-
 # Assign letter grades to students
 filled_data['Letter_Grade'] = filled_data['Total_Score'].apply(assign_letter_grade)
 
-# Define custom order for letter grades based on percentage scale (low to high)
-grade_order = ['F', 'D', 'C-', 'C', 'C+', 'B-', 'B', 'B+', 'A-', 'A']
-
-# Set the order for plotting
-filled_data['Letter_Grade'] = pd.Categorical(filled_data['Letter_Grade'], categories=grade_order, ordered=True)
-
-# Plot bar chart - distribution of letter grades in the correct order
+# Scatter plot: Total Score vs GPA
 plt.figure(figsize=(8, 6))
 plt.scatter(filled_data['Total_Score'], filled_data['GPA'], color='blue', alpha=0.5)  # X-axis: Total_Score, Y-axis: GPA
 plt.title('Total Score vs. GPA (Previous Semester)')
@@ -91,13 +79,23 @@ plt.grid(True)
 plt.tight_layout()
 plt.show()
 
-# Plot bar chart (tree structure): Total Score vs GPA (Previous Semester)
-plt.figure(figsize=(8, 6))
-filled_data.groupby('Total_Score')['GPA'].mean().plot(kind='bar', color='skyblue')  # Bar chart for Total_Score and GPA
+# Plot histogram (tree structure): Total Score vs GPA (Previous Semester)
+plt.figure(figsize=(10, 6))
+
+# Group by total score to calculate mean GPA
+avg_gpa_by_score = filled_data.groupby('Total_Score')['GPA'].mean()
+
+# Plot the histogram
+avg_gpa_by_score.plot(kind='bar', color='skyblue')
+
+# Set title and labels
 plt.title('Average GPA by Total Score')
 plt.xlabel('Total Score (Final Grade)')
 plt.ylabel('Average GPA (Previous Semester)')
-plt.xticks(rotation=0)
+x_labels = list(range(len(avg_gpa_by_score)))
+plt.xticks(ticks=x_labels[::10], labels=[round(score, 2) for score in avg_gpa_by_score.index[::10]], rotation=45)
+
+# Adjust layout and show plot
 plt.tight_layout()
 plt.show()
 
@@ -109,3 +107,4 @@ output_data = pd.merge(filled_data[['Student ID', 'Total_Score', 'Letter_Grade']
 
 # Export to CSV
 output_data.to_csv('student_grades.csv', index=False)
+
