@@ -79,23 +79,21 @@ filled_data['Letter_Grade'] = pd.Categorical(filled_data['Letter_Grade'], catego
 
 # Plot bar chart - distribution of letter grades in the correct order
 plt.figure(figsize=(8, 6))
-filled_data['Letter_Grade'].value_counts().sort_index().plot(kind='bar', color='skyblue')
-plt.title('Distribution of Letter Grades')
-plt.xlabel('Letter Grade')
-plt.ylabel('Number of Students')
-plt.xticks(rotation=0)
+plt.scatter(filled_data['Total_Score'], filled_data['GPA'], color='blue', alpha=0.5)  # X-axis: Total_Score, Y-axis: GPA
+plt.title('Total Score vs. GPA (Previous Semester)')
+plt.xlabel('Total Score (Final Grade)')
+plt.ylabel('GPA (Previous Semester)')
+plt.grid(True)
 plt.tight_layout()
 plt.show()
 
-# Plot scatter plot - GPA vs Letter Grades, ensuring correct letter grade order
+# Plot bar chart (tree structure): Total Score vs GPA (Previous Semester)
 plt.figure(figsize=(8, 6))
-plt.scatter(filled_data['GPA'], filled_data['Letter_Grade'].cat.codes, color='blue',
-            alpha=0.5)  # Use categorical codes for y-axis
-plt.title('GPA vs. Letter Grades')
-plt.xlabel('GPA (Previous Semester)')
-plt.ylabel('Letter Grade')
-plt.yticks(ticks=range(len(grade_order)), labels=grade_order)  # Set correct labels for y-axis
-plt.grid(True)
+filled_data.groupby('Total_Score')['GPA'].mean().plot(kind='bar', color='skyblue')  # Bar chart for Total_Score and GPA
+plt.title('Average GPA by Total Score')
+plt.xlabel('Total Score (Final Grade)')
+plt.ylabel('Average GPA (Previous Semester)')
+plt.xticks(rotation=0)
 plt.tight_layout()
 plt.show()
 
